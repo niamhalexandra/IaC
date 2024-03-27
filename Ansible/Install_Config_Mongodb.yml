@@ -1,0 +1,27 @@
+---
+- name: install mongodb 
+  hosts: db
+  become: true
+  tasks:
+    - name: Install MongoDB
+      apt:
+        name: mongodb
+        state: present
+
+    - name: edit config file bind ip
+      lineinfile:
+        path: /etc/mongodb.conf
+        regexp: '^bind_ip'
+        line: 'bind_ip = 0.0.0.0'
+
+    - name: edit config file uncomment port
+      lineinfile:
+        path: /etc/mongodb.conf
+        regexp: '^#?port'
+        line: 'port = 27017'
+        backup: yes
+    
+    - name: Restart MongoDB
+      service:
+        name: mongodb
+        state: restarted

@@ -1,0 +1,50 @@
+- hosts: web
+  gather_facts: yes
+  become: true
+  tasks:
+    - name: Add Node.js apt key
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+        state: present
+
+    - name: Add Node.js 17.x apt repo
+      apt_repository:
+        repo: deb https://deb.nodesource.com/node_17.x bionic main
+        update_cache: yes
+
+    - name: Install Node.js
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Clone repo
+      git:
+        repo: https://github.com/niamhalexandra/CI-CD_app.git
+        dest: /home/ubuntu/CI-CD_app/
+        clone: yes
+        update: yes
+
+    - name: Install dependencies
+      npm:
+        path: /home/ubuntu/CI-CD_app/app
+        state: present
+
+    - name: Install pm2
+      npm:
+        name: pm2@4.5.6
+        global: yes
+        state: present
+
+    - name: Stop all pm2 processes
+      command: pm2 stop all
+      ignore_errors: true
+      become_user: ubuntu
+
+    - name: Run pm2 start
+      command: pm2 start app.js
+      args:
+        chdir: /home/ubuntu/CI-CD_app/app
+      become_user: ubuntu
+
+
+

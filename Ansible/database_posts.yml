@@ -1,0 +1,81 @@
+--- 
+
+# Where do you want to run/install this playbook
+- hosts: web
+
+  # Would you like to see the logs?
+  gather_facts: yes
+
+  # Provide admin access (use sudo)  
+  become: true
+
+  # Instructions 
+  tasks:
+   
+    - name: Add env variable
+      lineinfile:
+        path: /home/ubuntu/.bashrc
+        line: export DB_HOST=mongodb://18.201.154.144:27017/posts
+        create: yes
+    
+    - name: Source bashrc
+      shell: source ~/.bashrc && echo $DB_HOST
+      args:
+        executable: /bin/bash
+      register: result
+
+    - name: Add Node.js apt key
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+        state: present
+
+    - name: Add Node.js 17.x apt repo
+      apt_repository:
+        repo: deb https://deb.nodesource.com/node_17.x bionic main
+        update_cache: yes
+
+    - name: Install Node.js
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Clone repo
+      git:
+        repo: https://github.com/niamhalexandra/CI-CD_app.git
+        dest: /home/ubuntu/CI-CD_app/
+        clone: yes
+        update: yes
+
+    - name: Install npm packages
+      npm:
+        path: /home/ubuntu/CI-CD_app/app/
+        state: latest
+      environment:
+        DB_HOST: mongodb://18.201.154.144:27017/posts
+
+    - name: Install dependencies
+      npm:
+        path: /home/ubuntu/CI-CD_app/app
+        state: present
+  
+    # Seed db
+    - name: Seed db
+      shell: node /home/ubuntu/CI-CD_app/app/seeds/seed.js
+
+    - name: Install pm2
+      npm:
+        name: pm2@4.5.6
+        global: yes
+        state: present
+
+    - name: Stop all pm2 processes
+      command: pm2 stop all
+      ignore_errors: true
+      become_user: ubuntu
+
+    - name: Run pm2 start
+      command: pm2 start app.js
+      args:
+        chdir: /home/ubuntu/CI-CD_app/app
+      become_user: ubuntu
+
