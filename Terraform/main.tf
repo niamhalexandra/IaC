@@ -57,3 +57,13 @@ resource "aws_instance" "app_instance" {
   }
 }
 
+# Create Repo 
+provider "github" {
+  token = var.github_token
+}
+
+resource "github_repository" "git_repo" {
+  name = var.repo_name
+  visibility = "public"
+}
+
