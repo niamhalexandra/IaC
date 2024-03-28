@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Specify cloud platform and region
 provider "aws" {
   region = "eu-west-1"
@@ -37,7 +36,8 @@ resource "aws_security_group" "example_sg" {
 # Create an EC2 instance
 resource "aws_instance" "app_instance" {
   # Specify the AMI ID
-  ami = "ami-02f0341ac93c96375"
+  #ami = "ami-02f0341ac93c96375"
+  ami = var.app_ami-id
 
   # Specify the instance type
   instance_type = "t2.micro"
